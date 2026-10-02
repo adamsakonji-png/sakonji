@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111112">
+  <title>Love in the dark</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      background: #111112;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      color: #fff;
+      font-synthesis: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      display: grid;
+      min-width: 280px;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      place-items: center;
+      background:
+        radial-gradient(ellipse at center, rgba(78, 15, 32, 0.12), transparent 48%),
+        #111112;
+      transition: background 1.2s ease;
+    }
+
+    body.is-accepted {
+      background:
+        radial-gradient(ellipse at center, rgba(57, 53, 104, 0.34), transparent 58%),
+        #080d20;
+    }
+
+    main {
+      display: grid;
+      width: min(100vw, 560px);
+      min-height: min(100vh, 500px);
+      place-items: center;
+    }
+
+    .screen {
+      grid-area: 1 / 1;
+      width: 100%;
+      text-align: center;
+    }
+
+    .proposal {
+      padding: 32px 20px;
+      animation: proposal-enter 0.9s ease-out both;
+    }
+
+    .proposal-heart {
+      display: block;
+      margin-bottom: 18px;
+      color: #ff315d;
+      font-size: 48px;
+      filter: drop-shadow(0 0 16px rgba(255, 20, 74, 0.55));
+      animation: proposal-beat 1.8s ease-in-out infinite;
+    }
+
+    .question {
+      margin: 0;
+      color: #fff4f6;
+      font-size: clamp(26px, 7vw, 42px);
+      font-weight: 650;
+      letter-spacing: -0.04em;
+      text-shadow: 0 0 24px rgba(255, 20, 74, 0.2);
+    }
+
+    .question-note {
+      margin: 12px 0 32px;
+      color: #b9a8ae;
+      font-size: 15px;
+    }
+
+    .answers {
+      display: flex;
+      min-height: 72px;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .answer {
+      min-width: 104px;
+      min-height: 48px;
+      padding: 12px 24px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 300ms, background 300ms, color 300ms;
+    }
+
+    .answer:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 4px;
+    }
+
+    .answer--yes {
+      z-index: 1;
+      color: #fff;
+      background: #e9194f;
+      box-shadow: 0 0 20px rgba(233, 25, 79, 0.35);
+      transform: scale(var(--yes-scale, 1));
+    }
+
+    .answer--yes:hover {
+      background: #ff315d;
+      box-shadow: 0 0 28px rgba(255, 49, 93, 0.65);
+    }
+
+    .answer--yes.is-insistent {
+      background: #c70d3c;
+      box-shadow: 0 0 34px rgba(255, 22, 69, 0.75);
+    }
+
+    .answer--no {
+      color: #e7dce0;
+      border-color: #51434a;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .answer--no:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .answer:disabled {
+      cursor: default;
+      opacity: 0.65;
+    }
+
+    .accepted[hidden] {
+      display: none;
+    }
+
+    .accepted:not([hidden]) {
+      animation: proposal-enter 0.8s ease-out both;
+    }
+
+    .heart-art {
+      width: min(82vw, 390px);
+      overflow: visible;
+      filter: drop-shadow(0 0 7px rgba(175, 132, 255, 0.42));
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: heart-enter 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    .heart-outline {
+      fill: none;
+      stroke: #d3b2ff;
+      stroke-width: 1.35;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 850;
+      stroke-dashoffset: 850;
+      opacity: 0.88;
+      animation: outline-draw 1.6s ease-out forwards, outline-glow 3s ease-in-out 1.6s infinite;
+    }
+
+    .heart-outline--outer {
+      stroke: #a77bdb;
+      opacity: 0.58;
+      animation-delay: 0.65s, 2.25s;
+    }
+
+    .heart-outline--middle {
+      stroke: #c29bef;
+      opacity: 0.75;
+      animation-delay: 0.4s, 2s;
+    }
+
+    .heart-outline--inner {
+      stroke: #f0dfff;
+      stroke-width: 1.1;
+      opacity: 0.82;
+      animation-delay: 0.15s, 1.75s;
+    }
+
+    .heart-outline--core {
+      stroke: #dcbfff;
+      stroke-width: 1;
+      opacity: 0.9;
+      animation-delay: 0s, 1.6s;
+    }
+
+    .love-note {
+      fill: #fff;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.35px;
+      text-anchor: middle;
+      paint-order: stroke fill;
+      stroke: #11172f;
+      stroke-width: 3px;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 5px rgba(198, 163, 255, 0.9));
+      opacity: 0;
+      animation: name-enter 0.8s ease-out 1.8s forwards, name-glow 2.8s ease-in-out 2.6s infinite;
+    }
+
+    .ring {
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+      filter: drop-shadow(0 0 7px rgba(213, 190, 255, 0.8));
+      animation: ring-enter 1s cubic-bezier(0.2, 0.8, 0.2, 1) 2.3s forwards;
+    }
+
+    .ring-band {
+      fill: rgba(199, 175, 246, 0.12);
+      stroke: #d4c0ff;
+      stroke-width: 4;
+    }
+
+    .ring-highlight {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 1;
+      stroke-linecap: round;
+    }
+
+    .ring-diamond {
+      fill: url(#diamond-fill);
+      stroke: #fff;
+      stroke-width: 1.2;
+      stroke-linejoin: round;
+    }
+
+    .ring-facet {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.95);
+      stroke-width: 0.8;
+    }
+
+    @keyframes outline-draw {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes outline-glow {
+      0%, 100% { opacity: 0.72; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes proposal-enter {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes proposal-beat {
+      0%, 100% { transform: scale(0.94); }
+      50% { transform: scale(1.08); }
+    }
+
+    @keyframes heart-enter {
+      from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.45);
+      }
+      70% {
+        opacity: 1;
+        transform: translateY(-5px) scale(1.04);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes name-glow {
+      0%, 100% { opacity: 0.72; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes name-enter {
+      from {
+        opacity: 0;
+        transform: translateY(9px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes ring-enter {
+      from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.25) rotate(-24deg);
+      }
+      70% {
+        opacity: 1;
+        transform: translateY(-3px) scale(1.12) rotate(5deg);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="screen proposal" id="proposal" aria-labelledby="question">
+      <span class="proposal-heart" aria-hidden="true">♥</span>
+      <h1 class="question" id="question">Khadija, will you marry me?</h1>
+      <p class="question-note" id="response" aria-live="polite">I have one very important question for you…</p>
+      <div class="answers">
+        <button class="answer answer--yes" id="yes-button" type="button">Yes</button>
+        <button class="answer answer--no" id="no-button" type="button">No</button>
+      </div>
+    </section>
+    <section class="screen accepted" id="accepted" aria-label="Khadija's heart" hidden>
+      <svg class="heart-art" viewBox="0 0 320 270" role="img" aria-labelledby="heart-title">
+        <title id="heart-title">Lavender concentric heart outlines with a diamond ring and the words I love you, Khadija</title>
+        <defs>
+          <linearGradient id="diamond-fill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#fffef2"/>
+            <stop offset="0.48" stop-color="#b9efff"/>
+            <stop offset="1" stop-color="#fff"/>
+          </linearGradient>
+        </defs>
+        <path class="heart-outline heart-outline--outer" d="M160 226C144 208 61 160 50 106 38 48 103 25 144 65c7 7 13 17 16 26 4-9 10-19 17-26 41-40 106-17 94 41-11 54-94 102-111 120Z" transform="translate(160 132) scale(1.08) translate(-160 -132)"/>
+        <path class="heart-outline" d="M160 226C144 208 61 160 50 106 38 48 103 25 144 65c7 7 13 17 16 26 4-9 10-19 17-26 41-40 106-17 94 41-11 54-94 102-111 120Z" transform="translate(160 132) scale(1.02) translate(-160 -132)"/>
+        <path class="heart-outline heart-outline--middle" d="M160 226C144 208 61 160 50 106 38 48 103 25 144 65c7 7 13 17 16 26 4-9 10-19 17-26 41-40 106-17 94 41-11 54-94 102-111 120Z" transform="translate(160 132) scale(.96) translate(-160 -132)"/>
+        <path class="heart-outline heart-outline--inner" d="M160 226C144 208 61 160 50 106 38 48 103 25 144 65c7 7 13 17 16 26 4-9 10-19 17-26 41-40 106-17 94 41-11 54-94 102-111 120Z" transform="translate(160 132) scale(.9) translate(-160 -132)"/>
+        <path class="heart-outline heart-outline--core" d="M160 226C144 208 61 160 50 106 38 48 103 25 144 65c7 7 13 17 16 26 4-9 10-19 17-26 41-40 106-17 94 41-11 54-94 102-111 120Z" transform="translate(160 132) scale(.84) translate(-160 -132)"/>
+        <text class="love-note" x="160" y="139">I love you, Khadija</text>
+        <g class="ring" aria-hidden="true">
+          <ellipse class="ring-band" cx="160" cy="185" rx="9" ry="6.5"/>
+          <path class="ring-highlight" d="M153 183a9 6.5 0 0 1 11-4"/>
+          <path class="ring-diamond" d="M160 165 168 172 160 181 152 172Z"/>
+          <path class="ring-facet" d="m152 172 8 2 8-2m-8-7v16m-8-9 4-7m12 7-4-7"/>
+        </g>
+      </svg>
+    </section>
+  </main>
+  <script>
+    const yesButton = document.querySelector("#yes-button");
+    const noButton = document.querySelector("#no-button");
+    const response = document.querySelector("#response");
+    const proposal = document.querySelector("#proposal");
+    const accepted = document.querySelector("#accepted");
+    let noCount = 0;
+
+    noButton.addEventListener("click", () => {
+      noCount += 1;
+      const scale = Math.min(1 + noCount * 0.22, 2.1);
+      yesButton.style.setProperty("--yes-scale", scale);
+
+      if (noCount >= 5) {
+        yesButton.textContent = "YES!!! 😤";
+        yesButton.classList.add("is-insistent");
+        response.textContent = "The heart really hopes you’ll say yes!";
+      } else {
+        response.textContent = [
+          "Are you sure? My heart is still hopeful…",
+          "Maybe give it another thought? 💗",
+          "That little heart is getting bigger!",
+          "I’m going to keep hoping…",
+        ][noCount - 1];
+      }
+    });
+
+    yesButton.addEventListener("click", () => {
+      proposal.hidden = true;
+      accepted.hidden = false;
+      document.body.classList.add("is-accepted");
+      accepted.focus({ preventScroll: true });
+    });
+  </script>
+</body>
+</html>
